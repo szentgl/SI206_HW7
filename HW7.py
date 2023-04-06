@@ -57,11 +57,14 @@ def make_players_table(data, cur, conn):
     cur.execute('SELECT * FROM Positions')
     for row in cur:
         temp_dict[row[1]] = row[0]
-    cur.execute('CREATE TABLE IF NOT EXISTS Players (id INTEGER PRIMARY KEY, name TEXT, position_id INT, birthyear INT, nationality TEXT)')
+    cur.execute('DROP TABLE IF EXISTS Players')
+    cur.execute('CREATE TABLE Players (id INTEGER PRIMARY KEY, name TEXT, position_id INT, birthyear INT, nationality TEXT)')
     for player in data['squad']:
-        cur.execute("INSERT OR IGNORE INTO Players (id,name,position_id,birthyear,nationality) VALUES (?,?,?,?,?)",(player['id'], player['name'], temp_dict[player['position']], player['dateOfBirth'], player['nationality']))
+        cur.execute("INSERT OR IGNORE INTO Players (id,name,position_id,birthyear,nationality) VALUES (?,?,?,?,?)",(int(player['id']), player['name'], temp_dict[player['position']], int(player['dateOfBirth'][:4]), player['nationality']))
     conn.commit()
-    print('a')
+    cur.execute('SELECT * FROM Players')
+    # for row in cur:
+    #     print(row)
 
 
 ## [TASK 2]: 10 points
@@ -75,7 +78,13 @@ def make_players_table(data, cur, conn):
         # the player's name, their position_id, and their nationality.
 
 def nationality_search(countries, cur, conn):
-    pass
+    temp_lst = []
+    cur.execute('SELECT * FROM Players')
+    for row in cur:
+        if row[-1] in countries:
+            temp_lst.append((row[1], row[2], row[-1]))
+    return temp_lst
+
 
 ## [TASK 3]: 10 points
 # finish the function birthyear_nationality_search
@@ -94,7 +103,13 @@ def nationality_search(countries, cur, conn):
 
 
 def birthyear_nationality_search(age, country, cur, conn):
-    pass
+    target_year = 2023 - age
+    temp_lst = []
+    cur.execute('SELECT * FROM Players')
+    for row in cur:
+        if row[-1] == country and target_year > int(row[3]):
+            temp_lst.append((row[1], row[-1], row[3]))
+    return temp_lst
 
 ## [TASK 4]: 15 points
 # finish the function position_birth_search
@@ -114,7 +129,17 @@ def birthyear_nationality_search(age, country, cur, conn):
     # HINT: You'll have to use JOIN for this task.
 
 def position_birth_search(position, age, cur, conn):
-       pass
+    target_year = 2023 - age
+    temp_lst = []
+    temp_dict = {}
+    cur.execute('SELECT * FROM Positions')
+    for row in cur:
+        temp_dict[row[1]] = row[0]
+    cur.execute('SELECT * FROM Players')
+    for row in cur:
+        if row[2] == temp_dict[position] and target_year < int(row[3]):
+            temp_lst.append((row[1], position, row[3]))
+    return temp_lst
 
 
 # [EXTRA CREDIT]
@@ -153,7 +178,16 @@ def position_birth_search(position, age, cur, conn):
 #     the passed year. 
 
 def make_winners_table(data, cur, conn):
-    pass
+    cur.execute('DROP TABLE IF EXISTS Winners')
+    cur.execute('CREATE TABLE Winners (id INTEGER PRIMARY KEY, name TEXT)')
+
+    for team in data['seasons']:
+         if type(team['winner']) == dict:
+            cur.execute("INSERT OR IGNORE INTO Winners (id,name) VALUES (?,?)",(int(team['winner']['id']), team['winner']['name']))
+    conn.commit()
+    cur.execute('SELECT * FROM Winners')
+    for row in cur:
+        print(row)
 
 def make_seasons_table(data, cur, conn):
     pass
@@ -214,21 +248,21 @@ class TestAllMethods(unittest.TestCase):
         self.assertEqual(c, [('Teden Mengi', 'Defence', 2002)])
     
     # test extra credit
-    def test_make_winners_table(self):
-        self.cur2.execute('SELECT * from Winners')
-        winners_list = self.cur2.fetchall()
+    # def test_make_winners_table(self):
+    #     self.cur2.execute('SELECT * from Winners')
+    #     winners_list = self.cur2.fetchall()
 
-        pass
+    #     pass
 
-    def test_make_seasons_table(self):
-        self.cur2.execute('SELECT * from Seasons')
-        seasons_list = self.cur2.fetchall()
+    # def test_make_seasons_table(self):
+    #     self.cur2.execute('SELECT * from Seasons')
+    #     seasons_list = self.cur2.fetchall()
 
-        pass
+    #     pass
 
-    def test_winners_since_search(self):
+    # def test_winners_since_search(self):
 
-        pass
+    #     pass
 
 
 def main():
@@ -239,6 +273,9 @@ def main():
     cur, conn = open_database('Football.db')
     make_positions_table(json_data, cur, conn)
     make_players_table(json_data, cur, conn)
+    nationality_search(['Uruguay', 'England'], cur, conn)
+    birthyear_nationality_search(10, 'England', cur, conn)
+    position_birth_search('Goalkeeper', 35, cur, conn)
     conn.close()
 
 
@@ -250,6 +287,6 @@ def main():
 
 main()
 
-# if __name__ == "__main__":
-#     main()
-#     unittest.main(verbosity = 2)
+if __name__ == "__main__":
+    main()
+    unittest.main(verbosity = 2)
