@@ -61,6 +61,7 @@ def make_players_table(data, cur, conn):
     for player in data['squad']:
         cur.execute("INSERT OR IGNORE INTO Players (id,name,position_id,birthyear,nationality) VALUES (?,?,?,?,?)",(player['id'], player['name'], temp_dict[player['position']], player['dateOfBirth'], player['nationality']))
     conn.commit()
+    print('a')
 
 
 ## [TASK 2]: 10 points
