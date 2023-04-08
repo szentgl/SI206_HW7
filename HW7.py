@@ -1,7 +1,7 @@
 
-# Your name:
-# Your student id:
-# Your email:
+# Your name: Lucas Szentgyorgyi
+# Your student id: 85320192
+# Your email: szentgl@umich.edu
 # List who you have worked with on this project:
 
 import unittest
@@ -185,9 +185,6 @@ def make_winners_table(data, cur, conn):
          if type(team['winner']) == dict:
             cur.execute("INSERT OR IGNORE INTO Winners (id,name) VALUES (?,?)",(int(team['winner']['id']), team['winner']['name']))
     conn.commit()
-    cur.execute('SELECT * FROM Winners')
-    for row in cur:
-        print(row)
 
 def make_seasons_table(data, cur, conn):
     pass
@@ -248,11 +245,10 @@ class TestAllMethods(unittest.TestCase):
         self.assertEqual(c, [('Teden Mengi', 'Defence', 2002)])
     
     # test extra credit
-    # def test_make_winners_table(self):
-    #     self.cur2.execute('SELECT * from Winners')
-    #     winners_list = self.cur2.fetchall()
-
-    #     pass
+    def test_make_winners_table(self):
+        self.cur2.execute('SELECT * from Winners')
+        winners_list = self.cur2.fetchall()
+        self.assertEqual(len(winners_list), 7)
 
     # def test_make_seasons_table(self):
     #     self.cur2.execute('SELECT * from Seasons')
